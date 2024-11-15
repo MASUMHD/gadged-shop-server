@@ -8,7 +8,10 @@ const port = process.env.PORT || 4000;
 
 
 // middleware
-app.use(cors())
+app.use(cors({
+    origin: "http://localhost:5173",
+    optionsSuccessStatus: 200,
+}))
 app.use(express.json())
 
 // mongodb
@@ -23,11 +26,45 @@ const client = new MongoClient(url, {
     }
 })
 
+// collection
+const userCollection = client.db('gadgetShop').collection('users');
+const productCollection = client.db('gadgetShop').collection('products');
+
+
+
 
 const dbConnect = async () => {
     try {
         client.connect();
         console.log('Database connection Successful')
+
+        // get user
+
+        app.get('/user/:email', async (req, res) => {
+            const query = {email: req.params.email};
+            const user = await userCollection.findOne(query);
+            res.send(user);
+        })
+
+        // insert user 
+
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            // check if email already exists
+            const query = {email: user.email}
+            const existingUser = await userCollection.findOne(query);
+
+            if (existingUser) {
+                return res.status(400).send({message: 'User already exists'})
+            }
+
+
+            const result = await userCollection.insertOne(user);
+            res.send(result);
+        })
+
+
+
     } catch (error) {
         console.log(error.name, error.message);
     }
