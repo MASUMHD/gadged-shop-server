@@ -20,7 +20,7 @@ const verifyJWT = (req, res, next) => {
     if (!authorization){
         return res.send({message: 'No Token'})
     }
-    const token = authorization.split(' ')[1];
+    const token = authorization.split(" ")[1];
     jwt.verify(token, process.env.ACCESS_KWT_TOKEN,(err,decoded) => {
         if (err){
             return res.send({message: 'Invalid Token'})
