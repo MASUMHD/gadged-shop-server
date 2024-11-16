@@ -99,6 +99,38 @@ const dbConnect = async () => {
             res.send(result);
         });
 
+        // get all products
+
+        // ....all products query....
+        // ** name searching
+        // ** sort by price
+        // ** filter by category
+        // ** filter by brand
+
+        app.get('/all-products', async (req , res) => {
+            const {title, category, brand} = req.query
+            const query = {};
+
+            if(title){
+                query.title = {$regex: title, $options: 'i'}
+            }
+
+            if(category){
+                query.category = {$regex: category, $options: 'i'}
+            }
+
+            if(brand){
+                query.brand = brand;
+            }
+
+            const sortOptions = sort === 'asc' ? 1 : -1
+
+            const products = await productCollection.find(query).sort({price: sortOptions}).toArray();
+
+            res.json(products);
+
+        })
+
 
 
     } catch (error) {
