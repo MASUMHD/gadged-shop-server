@@ -123,7 +123,7 @@ const dbConnect = async () => {
                 query.brand = brand;
             }
 
-            const sortOptions = sort === 'asc' ? 1 : -1
+            const sortOptions =  req.query.sort === 'asc' ? 1 : -1
 
             const products = await productCollection.find(query).sort({price: sortOptions}).toArray();
 
