@@ -107,43 +107,82 @@ const dbConnect = async () => {
         // ** filter by category
         // ** filter by brand
 
-        app.get('/all-products', async (req , res) => {
-            const {title, category, brand} = req.query
-            const query = {};
+//         app.get('/all-products', async (req , res) => {
+//             const {title, category, brand} = req.query
+//             const query = {};
 
-            if(title){
-                query.title = {$regex: title, $options: 'i'}
-            }
+//             if(title){
+//                 query.title = {$regex: title, $options: 'i'}
+//             }
 
-            if(category){
-                query.category = {$regex: category, $options: 'i'}
-            }
+//             if(category){
+//                 query.category = {$regex: category, $options: 'i'}
+//             }
 
-            if(brand){
-                query.brand = brand;
-            }
+//             if(brand){
+//                 query.brand = brand;
+//             }
 
-            const sortOptions =  req.query.sort === 'asc' ? 1 : -1
+//             const sortOptions =  req.query.sort === 'asc' ? 1 : -1
 
-            const products = await productCollection.find(query).sort({price: sortOptions}).toArray();
+//             const products = await productCollection.find(query).sort({price: sortOptions}).toArray();
             
-            // pagination 
-            const totalProducts = await productCollection.countDocuments(query);
+//             // pagination 
+//             const totalProducts = await productCollection.countDocuments();
+
+//           const productsInfo = await productCollection
+//          .find({}, { projection: { category: 1, brand: 1 } })
+//          .toArray();
+
+//          const categories = [
+//          ...new Set(productsInfo.map((product) => product.category)),
+//          ];
+
+//          const brands = [
+//          ...new Set(productsInfo.map((product) => product.brand)),
+//          ];
+
+//          res.json({ products: productsInfo, brands, categories, totalProducts });
 
 
-            // filter by category and brand
-            const productInfo = await productCollection.find({}, {projection: { category: 1, brand: 1}}).toArray();
+//         })
 
-           
 
-            // filter by category and brand
-            const brand = [...new Set(productInfo.map((product) => product.brand ))]
-            const category = [...new Set(productInfo.map((product) => product.category ))]
+    app.get('/all-products', async (req, res) => {
+        const { title, category, brand, page = 1, limit = 9 } = req.query;
+        const query = {};
+  
+        if (title) {
+        query.title = { $regex: title, $options: 'i' };
+        }
+        if (category) {
+        query.category = { $regex: category, $options: 'i' };
+        }
+        if (brand) {
+        query.brand = brand;
+        }
+    
+        const pageNumber = Number(page)
+        const limitNumber = Number(limit)
 
-            res.json({products, totalProducts, brand, category});
-
-        })
-
+        const sortOptions = req.query.sort === 'asc' ? 1 : -1;
+  
+        const products = await productCollection
+        .find(query)
+        .skip((pageNumber - 1) * limitNumber)
+        .limit(limitNumber)
+        .sort({ price: sortOptions })
+        .toArray();
+  
+        const totalProducts = await productCollection.countDocuments(query);
+  
+        const allProducts = await productCollection.find({}).toArray();
+        const categories = [...new Set(allProducts.map((product) => product.category))];
+        const brands = [...new Set(allProducts.map((product) => product.brand))];
+  
+        res.json({ products, brands, categories, totalProducts });
+    });
+  
 
 
     } catch (error) {
