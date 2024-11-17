@@ -126,8 +126,21 @@ const dbConnect = async () => {
             const sortOptions =  req.query.sort === 'asc' ? 1 : -1
 
             const products = await productCollection.find(query).sort({price: sortOptions}).toArray();
+            
+            // pagination 
+            const totalProducts = await productCollection.countDocuments(query);
 
-            res.json(products);
+
+            // filter by category and brand
+            const productInfo = await productCollection.find({}, {projection: { category: 1, brand: 1}}).toArray();
+
+           
+
+            // filter by category and brand
+            const brand = [...new Set(productInfo.map((product) => product.brand ))]
+            const category = [...new Set(productInfo.map((product) => product.category ))]
+
+            res.json({products, totalProducts, brand, category});
 
         })
 
