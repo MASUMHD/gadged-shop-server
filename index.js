@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const app = express();
@@ -56,6 +56,7 @@ const client = new MongoClient(url, {
 // collection
 const userCollection = client.db('gadgetShop').collection('users');
 const productCollection = client.db('gadgetShop').collection('products');
+const wishlistCollection = client.db('gadgetShop').collection('wishlists');
 
 
 
@@ -182,6 +183,56 @@ const dbConnect = async () => {
   
         res.json({ products, brands, categories, totalProducts });
     });
+
+
+
+    // add wishlist to email to query
+    app.post('/wishlists/:email', async (req, res) => {
+        const email = req.params.email;
+        const { productId, productTitle, productImage, productPrice, productCategory, productDescription, productBrand, productStock } = req.body;
+      
+        console.log('Wishlist Data:', req.body); 
+      
+        try {
+          // Check if user exists
+          const userExists = await userCollection.findOne({ email });
+          if (!userExists) {
+            return res.status(400).send({ message: 'User not found' });
+          }
+      
+          // Check if product is already in the wishlist
+          const existingWishlistItem = await wishlistCollection.findOne({
+            email,
+            productId,
+          });
+      
+          if (existingWishlistItem) {
+            return res.status(400).send({ message: 'Product already in wishlist' });
+          }
+      
+          // Add product to wishlist
+          const wishlistItem = {
+            email,
+            productId,
+            productTitle,
+            productImage,
+            productPrice,
+            productCategory,
+            productDescription,
+            productBrand,
+            productStock,
+            addedAt: new Date(),
+          };
+      
+          const result = await wishlistCollection.insertOne(wishlistItem);
+          res.status(200).send(result);
+        } catch (error) {
+          console.error('Error adding to wishlist:', error.message);
+          res.status(500).send({ message: 'Internal server error' });
+        }
+      });
+      
+  
   
 
 
@@ -208,3 +259,7 @@ app.post('/authentication', async (req, res) => {
 app.listen(port, () => {
     console.log(`Server running on port ${port}`)
 })
+
+
+
+
